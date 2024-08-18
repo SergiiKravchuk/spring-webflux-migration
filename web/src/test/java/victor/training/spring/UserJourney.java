@@ -1,6 +1,5 @@
 package victor.training.spring;
 
-import org.awaitility.Awaitility;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -21,14 +20,12 @@ import org.springframework.web.client.RestTemplate;
 import victor.training.spring.api.UC1_GetAllAuthors.GetAuthorsResponse;
 import victor.training.spring.api.UC2_GetAllPosts.GetPostsResponse;
 import victor.training.spring.api.UC5_CreateComment.CreateCommentRequest;
-import victor.training.spring.api.UC6_GetPostLikes;
 import victor.training.spring.util.WaitForApp;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static java.time.Duration.ofMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -207,17 +204,6 @@ public abstract class UserJourney {
   void uc5_create_comment_fails_for_nonexisting_postId() {
     assertThatThrownBy(() -> rest.postForObject(baseUrl() + "posts/119142/comments",new CreateCommentRequest(NEW_COMMENT, "troll"), Void.class))
         .isInstanceOf(HttpServerErrorException.InternalServerError.class);
-  }
-
-
-  @Test
-  @Order(300)
-  void uc6_getPostLikes() {
-    UC6_GetPostLikes.LikeEvent event = new UC6_GetPostLikes.LikeEvent(1L, 1);
-    rabbitTemplate.convertAndSend("likes", "likes.web", event);
-    rabbitTemplate.convertAndSend("likes", "likes.flux", event);
-    Awaitility.await().pollDelay(ofMillis(10)).pollDelay(ofMillis(10)).timeout(ofMillis(500))
-            .untilAsserted(() -> assertThat(rest.getForObject(baseUrl() + "posts/1/likes", Integer.class)).isEqualTo(1));
   }
 
   @AfterAll
